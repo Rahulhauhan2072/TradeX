@@ -1,0 +1,158 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradeX Pro</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo"><span>Trade</span>X</div>
+  <div class="search"><input id="search" placeholder="Search stocks..."></div>
+  <div class="live">● DEMO MARKET</div>
+  <div id="userBar" style="display:none"><span id="userGreeting"></span><button class="secondary" onclick="logout()">Logout</button></div>
+</header>
+
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-brand"><span>Trade</span>X</div>
+    <p class="auth-sub">Sign in or create your demo account</p>
+    <div class="auth-tabs">
+      <button type="button" id="loginTab" class="active" onclick="showAuth('login')">Login</button>
+      <button type="button" id="signupTab" onclick="showAuth('signup')">Sign Up</button>
+    </div>
+    <form id="authForm" onsubmit="handleAuth(event)">
+      <div id="nameWrap" style="display:none">
+        <label for="authName">Full name</label>
+        <input class="field" id="authName" type="text" placeholder="Enter your name" autocomplete="name">
+      </div>
+      <label for="authEmail">Email</label>
+      <input class="field" id="authEmail" type="email" placeholder="you@example.com" autocomplete="email" required>
+      <label for="authPassword">Password</label>
+      <input class="field" id="authPassword" type="password" placeholder="At least 6 characters" minlength="6" autocomplete="current-password" required>
+      <button class="green-btn auth-submit" id="authSubmit" type="submit">Login</button>
+    </form>
+    <p class="auth-note">Practice/demo only. This simple version stores account details in this browser and is not secure for real accounts or real money.</p>
+  </div>
+</div>
+
+<main class="container">
+
+<section class="stats">
+  <div class="card">
+    <p class="muted">WALLET BALANCE</p>
+    <h2 id="balance">₹0.00</h2>
+    <div class="actions">
+      <button class="green-btn" onclick="openFunds('deposit')">＋ Deposit</button>
+      <button class="secondary" onclick="openFunds('withdraw')">Withdraw</button>
+    </div>
+  </div>
+  <div class="card">
+    <p class="muted">PORTFOLIO VALUE</p>
+    <h2 id="portfolio">₹0.00</h2>
+    <span class="muted">Current demo valuation</span>
+  </div>
+  <div class="card">
+    <p class="muted">INVESTED AMOUNT</p>
+    <h2 id="invested">₹0.00</h2>
+    <span class="muted">Cost of holdings</span>
+  </div>
+  <div class="card">
+    <p class="muted">TOTAL P&L</p>
+    <h2 id="pnl" class="live">₹0.00</h2>
+    <span class="muted">Unrealised demo profit/loss</span>
+  </div>
+</section>
+
+<section class="layout">
+  <div class="panel">
+    <div class="heading">⭐ Watchlist</div>
+    <div id="watchlist"></div>
+  </div>
+
+  <div class="panel chart-area">
+    <div class="chart-head">
+      <div>
+        <div class="muted" id="symbol">RELIANCE · DEMO</div>
+        <h1 id="price">₹1,428.50</h1>
+        <span id="change" class="live">Price is moving</span>
+      </div>
+      <span class="live">● Simulated</span>
+    </div>
+    <canvas id="chart"></canvas>
+    <p class="muted">Simulated price history · Not actual exchange data</p>
+  </div>
+
+  <div class="panel order-panel">
+    <div class="tabs">
+      <button id="buyTab" class="selected-buy" onclick="setSide('BUY')">BUY</button>
+      <button id="sellTab" onclick="setSide('SELL')">SELL</button>
+    </div>
+    <div class="order-body">
+      <label>Stock</label>
+      <select id="orderStock"></select>
+      <label>Quantity</label>
+      <input class="field" id="qty" type="number" value="1" min="1" step="1">
+      <div class="total"><span class="muted">Order amount</span><strong id="total">₹1,428.50</strong></div>
+      <button id="tradeButton" class="green-btn full" onclick="trade()">Buy RELIANCE</button>
+      <p class="muted" style="margin-top:13px;line-height:1.5">Orders use simulated prices and virtual funds only.</p>
+    </div>
+  </div>
+</section>
+
+<section class="panel bottom">
+  <div class="heading">My Holdings</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Stock</th><th>Quantity</th><th>Average Price</th><th>Current Price</th><th>P&L</th></tr></thead>
+      <tbody id="holdings"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel bottom">
+  <div class="heading">Recent Orders</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Time</th><th>Stock</th><th>Side</th><th>Qty</th><th>Price</th><th>Status</th></tr></thead>
+      <tbody id="orders"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel bottom">
+  <div class="heading">Wallet Transactions</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Time</th><th>Transaction</th><th>Amount</th><th>Status</th></tr></thead>
+      <tbody id="transactions"></tbody>
+    </table>
+  </div>
+</section>
+</main>
+
+<div class="modal-backdrop" id="fundModal">
+  <div class="modal">
+    <h2 id="modalTitle">Deposit Funds</h2>
+    <p class="muted" id="fundModalNote">Demo wallet only.</p>
+
+    <div id="qrPayment" class="qr-payment" style="display:none"><p>Scan this QR code with a compatible UPI app.</p><div id="depositQrCode" style="display:flex;justify-content:center;background:#fff;padding:12px;border-radius:10px;margin:12px auto;width:fit-content"></div><p><strong id="qrAmount"></strong></p><p>UPI ID: rahul3131@fam</p><p>Time remaining</p><h2 id="depositTimer">05:00</h2><p id="depositMessage">Payment is not automatically verified.</p></div>
+
+    <label id="fundAmountLabel">Amount (₹)</label>
+    <input class="field" id="fundAmount" type="number" min="2000" max="100000" step="1" placeholder="Minimum ₹2,000">
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeFunds()">Cancel</button>
+      <button id="confirmFunds" class="green-btn" onclick="fundsAction()">Generate Payment QR</button>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

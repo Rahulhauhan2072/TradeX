@@ -1,0 +1,607 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradeX Pro</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#080e19;color:#f1f5f9;font:14px Arial,sans-serif}
+button,input{font:inherit}
+button{cursor:pointer}
+header{height:70px;background:#101a2a;border-bottom:1px solid #253247;display:flex;align-items:center;justify-content:space-between;padding:0 25px;gap:15px}
+.logo{font-size:25px;font-weight:bold}.logo span{color:#00d395}
+header input{background:#182438;border:1px solid #2a3950;color:white;padding:11px;border-radius:8px;width:260px}
+.live{color:#00d395}
+.container{max-width:1500px;margin:auto;padding:22px}
+button{border:0;border-radius:7px;padding:11px 15px;font-weight:bold}
+.green-btn{background:#00d395;color:#06140e}
+.red-btn{background:#ff5263;color:white}
+.secondary{background:#1c2b40;color:#e4edf8}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:18px}
+.card,.panel{background:#101a2a;border:1px solid #243247;border-radius:12px}
+.card{padding:19px}
+.muted{color:#91a0b5}
+.card p{margin-bottom:12px;font-size:12px}
+.card h2{font-size:23px;margin-bottom:8px}
+.actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.layout{display:grid;grid-template-columns:230px minmax(250px,1fr) 280px;gap:16px}
+.heading{padding:17px;border-bottom:1px solid #243247;font-size:16px}
+.stock{padding:16px;border-bottom:1px solid #202d40;display:flex;justify-content:space-between;cursor:pointer}
+.stock:hover,.stock.active{background:#1b2a40}
+.stock small{display:block;margin-top:5px;color:#91a0b5}
+.stock .quote{text-align:right}
+.quote strong,.quote small{display:block}
+.quote small{margin-top:5px}
+.chart-area{padding:20px}
+.chart-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.chart-head h1{font-size:28px;margin:8px 0}
+canvas{width:100%;height:330px;display:block;margin-top:22px}
+.tabs{display:flex}
+.tabs button{width:50%;border-radius:0;background:#182438;color:#a7b5c8}
+.tabs .selected-buy{color:#00d395;border-bottom:2px solid #00d395}
+.tabs .selected-sell{color:#ff5263;border-bottom:2px solid #ff5263}
+.order-body{padding:18px}
+label{display:block;color:#91a0b5;margin:15px 0 7px}
+select,.field{width:100%;background:#182438;color:white;border:1px solid #304058;border-radius:7px;padding:12px}
+.total{display:flex;justify-content:space-between;margin:20px 0}
+.full{width:100%}
+.bottom{margin-top:18px;overflow:hidden}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:620px}
+th,td{text-align:left;padding:15px;border-bottom:1px solid #202d40}
+th{color:#91a0b5;font-size:11px}
+.modal-backdrop{display:none;position:fixed;inset:0;background:#000b;z-index:5;align-items:center;justify-content:center;padding:15px}
+.modal-backdrop.open{display:flex}
+.modal{background:#101a2a;border:1px solid #34445b;border-radius:14px;padding:24px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
+.qr-payment{text-align:center;margin:16px 0 8px;padding:14px;background:#182438;border:1px solid #304058;border-radius:12px}
+.deposit-qr{display:block;width:100%;max-width:260px;height:auto;margin:12px auto;border-radius:10px;background:#f6d68f}
+.qr-payment p{color:#cbd5e1;line-height:1.5;font-size:12px}
+.qr-payment strong{color:#f6d68f}
+.modal h2{margin-bottom:10px}
+.modal .field{margin:15px 0}
+.modal-actions{display:flex;gap:10px;margin-top:18px}
+.modal-actions button{flex:1}
+.toast{position:fixed;bottom:20px;right:20px;background:#203148;padding:15px 20px;border-radius:9px;display:none;z-index:30}
+.toast.show{display:block}
+
+.auth-screen{position:fixed;inset:0;z-index:20;background:rgba(3,8,17,.96);display:flex;align-items:center;justify-content:center;padding:18px}
+.auth-card{width:100%;max-width:420px;background:#101a2a;border:1px solid #2b3d55;border-radius:16px;padding:28px;box-shadow:0 20px 70px #0008}
+.auth-brand{font-size:30px;font-weight:800;text-align:center;margin-bottom:8px}.auth-brand span{color:#00d395}
+.auth-sub{text-align:center;color:#91a0b5;margin-bottom:22px}
+.auth-tabs{display:flex;gap:8px;margin-bottom:18px}.auth-tabs button{flex:1;background:#1c2b40;color:#cbd5e1}.auth-tabs button.active{background:#00d395;color:#06140e}
+.auth-card label{margin-top:13px}.auth-card .field{margin-top:7px}.auth-submit{width:100%;margin-top:20px}
+.auth-note{color:#91a0b5;font-size:12px;line-height:1.5;margin-top:14px;text-align:center}
+#userBar{display:flex;align-items:center;gap:10px;color:#cbd5e1;white-space:nowrap}
+@media(max-width:650px){#userBar{width:100%;justify-content:space-between}.auth-card{padding:22px}}
+
+@media(max-width:1000px){.layout{grid-template-columns:220px 1fr}.order-panel{grid-column:1/-1}.stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){header{height:auto;padding:15px;flex-wrap:wrap}.search{width:100%}header input{width:100%}.container{padding:12px}.stats{grid-template-columns:1fr 1fr}.layout{grid-template-columns:1fr}.order-panel{grid-column:auto}.card{padding:13px}.card h2{font-size:18px}canvas{height:260px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><span>Trade</span>X</div>
+  <div class="search"><input id="search" placeholder="Search stocks..."></div>
+  <div class="live">● DEMO MARKET</div>
+  <div id="userBar" style="display:none"><span id="userGreeting"></span><button class="secondary" onclick="logout()">Logout</button></div>
+</header>
+
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-brand"><span>Trade</span>X</div>
+    <p class="auth-sub">Sign in or create your demo account</p>
+    <div class="auth-tabs">
+      <button type="button" id="loginTab" class="active" onclick="showAuth('login')">Login</button>
+      <button type="button" id="signupTab" onclick="showAuth('signup')">Sign Up</button>
+    </div>
+    <form id="authForm" onsubmit="handleAuth(event)">
+      <div id="nameWrap" style="display:none">
+        <label for="authName">Full name</label>
+        <input class="field" id="authName" type="text" placeholder="Enter your name" autocomplete="name">
+      </div>
+      <label for="authEmail">Email</label>
+      <input class="field" id="authEmail" type="email" placeholder="you@example.com" autocomplete="email" required>
+      <label for="authPassword">Password</label>
+      <input class="field" id="authPassword" type="password" placeholder="At least 6 characters" minlength="6" autocomplete="current-password" required>
+      <button class="green-btn auth-submit" id="authSubmit" type="submit">Login</button>
+    </form>
+    <p class="auth-note">Practice/demo only. This simple version stores account details in this browser and is not secure for real accounts or real money.</p>
+  </div>
+</div>
+
+<main class="container">
+
+<section class="stats">
+  <div class="card">
+    <p class="muted">WALLET BALANCE</p>
+    <h2 id="balance">₹0.00</h2>
+    <div class="actions">
+      <button class="green-btn" onclick="openFunds('deposit')">＋ Deposit</button>
+      <button class="secondary" onclick="openFunds('withdraw')">Withdraw</button>
+    </div>
+  </div>
+  <div class="card">
+    <p class="muted">PORTFOLIO VALUE</p>
+    <h2 id="portfolio">₹0.00</h2>
+    <span class="muted">Current demo valuation</span>
+  </div>
+  <div class="card">
+    <p class="muted">INVESTED AMOUNT</p>
+    <h2 id="invested">₹0.00</h2>
+    <span class="muted">Cost of holdings</span>
+  </div>
+  <div class="card">
+    <p class="muted">TOTAL P&L</p>
+    <h2 id="pnl" class="live">₹0.00</h2>
+    <span class="muted">Unrealised demo profit/loss</span>
+  </div>
+</section>
+
+<section class="layout">
+  <div class="panel">
+    <div class="heading">⭐ Watchlist</div>
+    <div id="watchlist"></div>
+  </div>
+
+  <div class="panel chart-area">
+    <div class="chart-head">
+      <div>
+        <div class="muted" id="symbol">RELIANCE · DEMO</div>
+        <h1 id="price">₹1,428.50</h1>
+        <span id="change" class="live">Price is moving</span>
+      </div>
+      <span class="live">● Simulated</span>
+    </div>
+    <canvas id="chart"></canvas>
+    <p class="muted">Simulated price history · Not actual exchange data</p>
+  </div>
+
+  <div class="panel order-panel">
+    <div class="tabs">
+      <button id="buyTab" class="selected-buy" onclick="setSide('BUY')">BUY</button>
+      <button id="sellTab" onclick="setSide('SELL')">SELL</button>
+    </div>
+    <div class="order-body">
+      <label>Stock</label>
+      <select id="orderStock"></select>
+      <label>Quantity</label>
+      <input class="field" id="qty" type="number" value="1" min="1" step="1">
+      <div class="total"><span class="muted">Order amount</span><strong id="total">₹1,428.50</strong></div>
+      <button id="tradeButton" class="green-btn full" onclick="trade()">Buy RELIANCE</button>
+      <p class="muted" style="margin-top:13px;line-height:1.5">Orders use simulated prices and virtual funds only.</p>
+    </div>
+  </div>
+</section>
+
+<section class="panel bottom">
+  <div class="heading">My Holdings</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Stock</th><th>Quantity</th><th>Average Price</th><th>Current Price</th><th>P&L</th></tr></thead>
+      <tbody id="holdings"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel bottom">
+  <div class="heading">Recent Orders</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Time</th><th>Stock</th><th>Side</th><th>Qty</th><th>Price</th><th>Status</th></tr></thead>
+      <tbody id="orders"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel bottom">
+  <div class="heading">Wallet Transactions</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Time</th><th>Transaction</th><th>Amount</th><th>Status</th></tr></thead>
+      <tbody id="transactions"></tbody>
+    </table>
+  </div>
+</section>
+</main>
+
+<div class="modal-backdrop" id="fundModal">
+  <div class="modal">
+    <h2 id="modalTitle">Deposit Funds</h2>
+    <p class="muted" id="fundModalNote">Demo wallet only.</p>
+
+    <div id="qrPayment" class="qr-payment" style="display:none"><p>Scan this QR code with a compatible UPI app.</p><div id="depositQrCode" style="display:flex;justify-content:center;background:#fff;padding:12px;border-radius:10px;margin:12px auto;width:fit-content"></div><p><strong id="qrAmount"></strong></p><p>UPI ID: rahul3131@fam</p><p>Time remaining</p><h2 id="depositTimer">05:00</h2><p id="depositMessage">Payment is not automatically verified.</p></div>
+
+    <label id="fundAmountLabel">Amount (₹)</label>
+    <input class="field" id="fundAmount" type="number" min="2000" max="100000" step="1" placeholder="Minimum ₹2,000">
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeFunds()">Cancel</button>
+      <button id="confirmFunds" class="green-btn" onclick="fundsAction()">Generate Payment QR</button>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const initialStocks = {
+  RELIANCE:1428.50, TCS:3984.20, INFY:1562.80,
+  HDFCBANK:1712.35, ICICIBANK:1324.15, SBIN:987.45
+};
+
+let state;
+try {
+  state = JSON.parse(localStorage.getItem("tradex-demo-state"));
+} catch(e) {}
+
+if (!state || typeof state.balance !== "number") {
+  state = {
+    balance:0,
+    stocks:{...initialStocks},
+    holdings:{},
+    orders:[],
+    transactions:[]
+  };
+}
+state.stocks = {...initialStocks,...state.stocks};
+
+try {
+  if (!localStorage.getItem("tradex-zero-balance-v1")) {
+    state.balance = 0;
+    localStorage.setItem("tradex-zero-balance-v1", "yes");
+    localStorage.setItem("tradex-demo-state", JSON.stringify(state));
+  }
+} catch (e) {}
+
+let selected = "RELIANCE";
+let side = "BUY";
+let fundMode = "deposit";
+let history = [];
+let lastPrice = state.stocks[selected];
+let toastTimer;
+
+let authMode = "login";
+let currentUser = null;
+const USERS_KEY = "tradex-demo-users";
+const SESSION_KEY = "tradex-demo-session";
+
+function showAuth(mode) {
+  authMode = mode;
+  document.getElementById("loginTab").classList.toggle("active", mode === "login");
+  document.getElementById("signupTab").classList.toggle("active", mode === "signup");
+  document.getElementById("nameWrap").style.display = mode === "signup" ? "block" : "none";
+  document.getElementById("authName").required = mode === "signup";
+  document.getElementById("authPassword").autocomplete = mode === "signup" ? "new-password" : "current-password";
+  document.getElementById("authSubmit").textContent = mode === "signup" ? "Create Account" : "Login";
+}
+function getUsers() {
+  try { return JSON.parse(localStorage.getItem(USERS_KEY) || "[]"); }
+  catch (e) { return []; }
+}
+function handleAuth(event) {
+  event.preventDefault();
+  const email = document.getElementById("authEmail").value.trim().toLowerCase();
+  const password = document.getElementById("authPassword").value;
+  const name = document.getElementById("authName").value.trim();
+  const users = getUsers();
+  if (authMode === "signup") {
+    if (!name) return notify("Please enter your name");
+    if (users.some(user => user.email === email)) return notify("Account already exists. Please login.");
+    users.push({name, email, password});
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    loginUser({name, email});
+    notify("Demo account created");
+  } else {
+    const user = users.find(user => user.email === email && user.password === password);
+    if (!user) return notify("Incorrect email or password, or please sign up first.");
+    loginUser({name: user.name, email: user.email});
+    notify("Login successful");
+  }
+}
+function loginUser(user) {
+  currentUser = user;
+  localStorage.setItem(SESSION_KEY, JSON.stringify({name:user.name, email:user.email}));
+  document.getElementById("authScreen").style.display = "none";
+  document.getElementById("userBar").style.display = "flex";
+  document.getElementById("userGreeting").textContent = "Hi, " + user.name;
+}
+function logout() {
+  localStorage.removeItem(SESSION_KEY);
+  currentUser = null;
+  document.getElementById("authScreen").style.display = "flex";
+  document.getElementById("userBar").style.display = "none";
+  showAuth("login");
+}
+function restoreSession() {
+  try {
+    const user = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
+    if (user && user.email) loginUser(user);
+  } catch (e) {}
+}
+
+function money(n) {
+  return "₹" + n.toLocaleString("en-IN", {
+    minimumFractionDigits:2, maximumFractionDigits:2
+  });
+}
+function save() {
+  localStorage.setItem("tradex-demo-state",JSON.stringify(state));
+}
+function notify(msg) {
+  const t=document.getElementById("toast");
+  t.textContent=msg;t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove("show"),2600);
+}
+function renderWatchlist() {
+  const box=document.getElementById("watchlist");
+  box.innerHTML="";
+  Object.keys(state.stocks).forEach(name=>{
+    const p=state.stocks[name];
+    const old=initialStocks[name];
+    const change=(p-old)/old*100;
+    const row=document.createElement("div");
+    row.className="stock"+(name===selected?" active":"");
+    row.innerHTML=`<div><strong>${name}</strong><small>DEMO</small></div>
+      <div class="quote"><strong>${money(p)}</strong>
+      <small class="${change>=0?'live':'red'}">${change>=0?'+':''}${change.toFixed(2)}%</small></div>`;
+    row.onclick=()=>selectStock(name);
+    box.appendChild(row);
+  });
+}
+function selectStock(name) {
+  selected=name;
+  lastPrice=state.stocks[name];
+  document.getElementById("orderStock").value=name;
+  renderWatchlist();renderPrice();drawChart();updateTotal();
+}
+function renderPrice() {
+  const p=state.stocks[selected];
+  const change=(p-initialStocks[selected])/initialStocks[selected]*100;
+  document.getElementById("symbol").textContent=selected+" · DEMO";
+  document.getElementById("price").textContent=money(p);
+  const c=document.getElementById("change");
+  c.className=change>=0?"live":"red";
+  c.textContent=(change>=0?"+":"")+change.toFixed(2)+"% from starting price";
+}
+function renderWallet() {
+  document.getElementById("balance").textContent=money(state.balance);
+  let invested=0,value=0;
+  Object.entries(state.holdings).forEach(([name,h])=>{
+    invested+=h.qty*h.avg;
+    value+=h.qty*state.stocks[name];
+  });
+  document.getElementById("invested").textContent=money(invested);
+  document.getElementById("portfolio").textContent=money(value);
+  const pnl=value-invested;
+  const el=document.getElementById("pnl");
+  el.textContent=(pnl>=0?"+":"")+money(pnl);
+  el.className=pnl>=0?"live":"red";
+  renderHoldings();
+}
+function renderHoldings() {
+  const body=document.getElementById("holdings");
+  body.innerHTML="";
+  Object.entries(state.holdings).filter(([n,h])=>h.qty>0).forEach(([name,h])=>{
+    const pnl=h.qty*(state.stocks[name]-h.avg);
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${name}</td><td>${h.qty}</td><td>${money(h.avg)}</td>
+      <td>${money(state.stocks[name])}</td>
+      <td class="${pnl>=0?'live':'red'}">${money(pnl)}</td>`;
+    body.appendChild(tr);
+  });
+  if(!body.children.length) body.innerHTML='<tr><td colspan="5" class="muted">No holdings yet. Try a demo Buy order.</td></tr>';
+}
+function renderOrders() {
+  const body=document.getElementById("orders");
+  body.innerHTML="";
+  state.orders.slice(0,20).forEach(o=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${o.time}</td><td>${o.name}</td>
+      <td class="${o.side==='BUY'?'live':'red'}">${o.side}</td>
+      <td>${o.qty}</td><td>${money(o.price)}</td><td class="live">DEMO FILLED</td>`;
+    body.appendChild(tr);
+  });
+  if(!body.children.length) body.innerHTML='<tr><td colspan="6" class="muted">No orders yet</td></tr>';
+}
+function renderTransactions() {
+  const body=document.getElementById("transactions");
+  body.innerHTML="";
+  state.transactions.slice(0,20).forEach(t=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${t.time}</td><td>${t.type}</td>
+      <td class="${t.type==='Deposit'?'live':'red'}">${money(t.amount)}</td><td class="live">DEMO</td>`;
+    body.appendChild(tr);
+  });
+  if(!body.children.length) body.innerHTML='<tr><td colspan="4" class="muted">No wallet transactions yet</td></tr>';
+}
+function updateTotal() {
+  const qty=Number(document.getElementById("qty").value);
+  document.getElementById("total").textContent=money(Math.max(0,qty)*state.stocks[selected]);
+}
+function setSide(s) {
+  side=s;
+  document.getElementById("buyTab").className=s==="BUY"?"selected-buy":"";
+  document.getElementById("sellTab").className=s==="SELL"?"selected-sell":"";
+  const btn=document.getElementById("tradeButton");
+  btn.textContent=(s==="BUY"?"Buy ":"Sell ")+selected;
+  btn.className=(s==="BUY"?"green-btn":"red-btn")+" full";
+}
+function trade() {
+  const qty=Number(document.getElementById("qty").value);
+  const price=state.stocks[selected],amount=qty*price;
+  if(!Number.isSafeInteger(qty)||qty<1) return notify("Enter a valid whole-number quantity");
+  const h=state.holdings[selected]||{qty:0,avg:0};
+  if(side==="BUY") {
+    if(amount>state.balance) return notify("Insufficient demo funds. Deposit virtual funds first.");
+    h.avg=(h.qty*h.avg+amount)/(h.qty+qty);
+    h.qty+=qty;
+    state.balance-=amount;
+  } else {
+    if(qty>h.qty) return notify("You don't own enough shares to sell");
+    h.qty-=qty;
+    state.balance+=amount;
+  }
+  state.holdings[selected]=h;
+  state.orders.unshift({name:selected,side,qty,price,time:new Date().toLocaleTimeString()});
+  save();renderWallet();renderOrders();renderWatchlist();updateTotal();
+  notify(`${side} demo order completed: ${qty} ${selected}`);
+}
+let depositCountdown = null;
+let depositDeadline = 0;
+const depositUpiId = "rahul3131@fam";
+const depositPayeeName = "Rahul";
+
+function openFunds(mode) {
+  clearInterval(depositCountdown);
+  depositCountdown = null;
+  fundMode = mode;
+  document.getElementById("modalTitle").textContent = mode === "deposit" ? "Deposit Funds" : "Withdraw Demo Funds";
+  document.getElementById("confirmFunds").textContent = mode === "deposit" ? "Generate Payment QR" : "Withdraw";
+  document.getElementById("fundAmount").value = "";
+  document.getElementById("qrPayment").style.display = "none";
+  document.getElementById("depositQrCode").innerHTML = "";
+  document.getElementById("depositTimer").textContent = "05:00";
+  document.getElementById("depositMessage").textContent = "Payment is not automatically verified.";
+  document.getElementById("fundAmount").disabled = false;
+  document.getElementById("confirmFunds").disabled = false;
+  document.getElementById("fundModalNote").textContent = mode === "deposit"
+    ? "Minimum deposit ₹2,000. Payment will not automatically update this demo wallet."
+    : "Withdrawals affect demo funds only.";
+  document.getElementById("fundAmountLabel").textContent = mode === "deposit" ? "Deposit amount (₹)" : "Amount (₹)";
+  document.getElementById("fundAmount").min = mode === "deposit" ? "2000" : "1";
+  document.getElementById("fundAmount").max = mode === "deposit" ? "100000" : "";
+  document.getElementById("fundModal").classList.add("open");
+}
+
+function closeFunds() {
+  clearInterval(depositCountdown);
+  depositCountdown = null;
+  document.getElementById("fundAmount").disabled = false;
+  document.getElementById("confirmFunds").disabled = false;
+  document.getElementById("fundModal").classList.remove("open");
+}
+
+function fundsAction() {
+  const amount = Number(document.getElementById("fundAmount").value);
+  if (!Number.isSafeInteger(amount) || amount <= 0) return notify("Enter a valid whole-rupee amount");
+
+  if (fundMode === "deposit") {
+    if (amount < 2000 || amount > 100000) return notify("Minimum deposit ₹2,000 and maximum ₹1,00,000.");
+    if (typeof QRCode === "undefined") return notify("QR library did not load. Check your internet connection.");
+    clearInterval(depositCountdown);
+    const upiLink = "upi://pay?pa=" + encodeURIComponent(depositUpiId) +
+      "&pn=" + encodeURIComponent(depositPayeeName) +
+      "&am=" + amount.toFixed(2) + "&cu=INR";
+    document.getElementById("depositQrCode").innerHTML = "";
+    new QRCode(document.getElementById("depositQrCode"), {
+      text: upiLink, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M
+    });
+    document.getElementById("qrAmount").textContent = "Pay ₹" + amount.toFixed(2);
+    document.getElementById("qrPayment").style.display = "block";
+    document.getElementById("depositMessage").textContent = "Scan and pay. This page cannot verify payment automatically.";
+    document.getElementById("fundAmount").disabled = true;
+    document.getElementById("confirmFunds").disabled = true;
+    depositDeadline = Date.now() + 5 * 60 * 1000;
+    updateDepositTimer();
+    depositCountdown = setInterval(updateDepositTimer, 1000);
+    return;
+  }
+
+  if (amount > state.balance) return notify("Insufficient available demo balance");
+  state.balance -= amount;
+  state.transactions.unshift({type:"Withdraw", amount, time:new Date().toLocaleTimeString()});
+  save(); renderWallet(); renderTransactions(); closeFunds();
+  notify("Demo funds withdrawn");
+}
+
+function updateDepositTimer() {
+  const remaining = Math.max(0, Math.ceil((depositDeadline - Date.now()) / 1000));
+  document.getElementById("depositTimer").textContent =
+    String(Math.floor(remaining / 60)).padStart(2, "0") + ":" +
+    String(remaining % 60).padStart(2, "0");
+  if (remaining === 0) {
+    clearInterval(depositCountdown);
+    depositCountdown = null;
+    document.getElementById("depositQrCode").innerHTML = "";
+    document.getElementById("depositMessage").textContent =
+      "QR request expired. If you already paid, verify the transaction before retrying.";
+    document.getElementById("confirmFunds").disabled = false;
+    document.getElementById("fundAmount").disabled = false;
+    document.getElementById("confirmFunds").textContent = "Generate New QR";
+  }
+}
+
+/* Moving simulated prices */
+const canvas=document.getElementById("chart");
+const ctx=canvas.getContext("2d");
+function seedHistory() {
+  history=[];
+  let p=state.stocks[selected];
+  for(let i=0;i<65;i++) {
+    const open=p;
+    p=Math.max(1,p+(Math.random()-.5)*p*.004);
+    history.push({open,close:p,high:Math.max(open,p)+Math.random()*p*.001,low:Math.min(open,p)-Math.random()*p*.001});
+  }
+}
+function drawChart() {
+  const rect=canvas.getBoundingClientRect();
+  if(!rect.width||!rect.height)return;
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const w=rect.width,h=rect.height;
+  ctx.clearRect(0,0,w,h);
+  const min=Math.min(...history.map(c=>c.low));
+  const max=Math.max(...history.map(c=>c.high));
+  const pad=(max-min)*.12||1;
+  const lo=min-pad,hi=max+pad;
+  const y=v=>h-((v-lo)/(hi-lo))*h;
+  const step=w/history.length,cw=Math.max(3,step*.58);
+  history.forEach((c,i)=>{
+    const x=i*step+step/2,up=c.close>=c.open;
+    ctx.strokeStyle=up?"#00d395":"#ff5263";
+    ctx.fillStyle=ctx.strokeStyle;
+    ctx.beginPath();ctx.moveTo(x,y(c.high));ctx.lineTo(x,y(c.low));ctx.stroke();
+    const top=y(Math.max(c.open,c.close));
+    const bh=Math.max(1,Math.abs(y(c.open)-y(c.close)));
+    ctx.fillRect(x-cw/2,top,cw,bh);
+  });
+  const current=history[history.length-1].close;
+  ctx.setLineDash([5,4]);ctx.strokeStyle="#90a4bd";
+  ctx.beginPath();ctx.moveTo(0,y(current));ctx.lineTo(w,y(current));ctx.stroke();
+  ctx.setLineDash([]);
+}
+function tick() {
+  Object.keys(state.stocks).forEach(name=>{
+    const old=state.stocks[name];
+    const next=Math.max(.01,old+(Math.random()-.5)*old*.002);
+    state.stocks[name]=Number(next.toFixed(2));
+  });
+  const p=state.stocks[selected];
+  const last=history[history.length-1];
+  last.high=Math.max(last.high,p);
+  last.low=Math.min(last.low,p);
+  last.close=p;
+  if(Math.random()<.55) {
+    history.push({open:p,close:p,high:p,low:p});
+    if(history.length>65)history.shift();
+  }
+  renderWatchlist();renderPrice();renderWallet();updateTotal();drawChart();save();
+}
+document.getElementById("orderStock").innerHTML=Object.keys(state.stocks).map(n=>`<option value="${n}">${n}</option>`).join("");
+document.getElementById("orderStock").addEventListener("change",e=>selectStock(e.target.value));
+document.getElementById("qty").addEventListener("input",updateTotal);
+document.getElementById("search").addEventListener("input",e=>{
+  const q=e.target.value.toUpperCase();
+  document.querySelectorAll(".stock").forEach(el=>el.style.display=el.textContent.toUpperCase().includes(q)?"flex":"none");
+});
+window.addEventListener("resize",drawChart);
+seedHistory();renderWatchlist();renderPrice();renderWallet();renderOrders();renderTransactions();setSide("BUY");updateTotal();drawChart();restoreSession();
+setInterval(tick,1000);
+</script>
+</body>
+</html>

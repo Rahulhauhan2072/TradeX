@@ -384,8 +384,8 @@ function trade() {
 let depositCountdown = null;
 let depositDeadline = 0;
 
-const depositUpiId = "rahul3131@fam";
-const depositPayeeName = "Rahul";
+const depositUpiId = "guman2030@fam";
+const depositPayeeName = "guman";
 
 function openFunds(mode) {
   clearInterval(depositCountdown);
